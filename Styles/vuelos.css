@@ -42,9 +42,15 @@ footer {
     cursor: pointer;
 }
 
-.boton_reservar:hover {
+.boton_reservar:not(.boton_reservar-disabled):hover {
     background-color: rgb(166, 180, 206);
     color: black;
+}
+
+.boton_reservar-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
 }
 
 .filtro_equipaje {

@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
             aplicarFiltros();
             mostrarDatosBusqueda();
         } else {
-            agregarFiltrosBusqueda('Buenos Aires', 'Madrid');
+            agregarFiltrosBusqueda('Buenos Aires', 'Madrid', false);
         }
     }
 });
@@ -86,6 +86,13 @@ function renderizarVueloDeOferta(oferta) {
 
     article.querySelector('.boton_reservar').addEventListener('click', function(e) {
         e.preventDefault();
+
+        const datosBusqueda = cargarDatos('datosBusquedaVuelos');
+        if (!datosBusqueda || !datosBusqueda.pasajeros || !datosBusqueda.clase) {
+            mostrarNotificacion('Seleccioná pasajeros y clase antes de reservar.', 'error');
+            return;
+        }
+
         confirmarSeleccionVuelo(vueloOferta);
     });
 
@@ -98,7 +105,7 @@ function renderizarVueloDeOferta(oferta) {
     console.log('✓ Vuelo de oferta mostrado:', vueloOferta);
 }
 
-function agregarFiltrosBusqueda(nombreOrigen, nombreDestino) {
+function agregarFiltrosBusqueda(nombreOrigen, nombreDestino, mostrarResumen = true) {
     const filtro = document.querySelector('.filtro');
     if (!filtro || document.getElementById('oferta-fecha-ida')) return;
 
@@ -163,7 +170,12 @@ function agregarFiltrosBusqueda(nombreOrigen, nombreDestino) {
             pasajeros: selectPasajeros.value,
             clase: selectClase.value
         });
-        mostrarDatosBusqueda();
+
+        actualizarEstadoBotonesReservar(!!selectPasajeros.value && !!selectClase.value);
+
+        if (mostrarResumen) {
+            mostrarDatosBusqueda();
+        }
     }
 
     document.querySelectorAll('input[name="oferta-tipo"]').forEach(radio => {
@@ -183,6 +195,12 @@ function agregarFiltrosBusqueda(nombreOrigen, nombreDestino) {
 
 function formatearFechaISO(fecha) {
     return fecha.toISOString().split('T')[0];
+}
+
+function actualizarEstadoBotonesReservar(habilitado) {
+    document.querySelectorAll('.boton_reservar').forEach(boton => {
+        boton.classList.toggle('boton_reservar-disabled', !habilitado);
+    });
 }
 
 function renderizarVuelos() {
@@ -359,9 +377,13 @@ function guardarVueloSeleccionado(vueloId) {
     const vuelo = vuelosMock.find(v => v.id === vueloId);
     if (vuelo) {
         const datosBusqueda = cargarDatos('datosBusquedaVuelos');
-        const vueloAGuardar = datosBusqueda
-            ? { ...vuelo, origen: obtenerCodigoCiudad(datosBusqueda.origen), destino: obtenerCodigoCiudad(datosBusqueda.destino) }
-            : vuelo;
+
+        if (!datosBusqueda || !datosBusqueda.pasajeros || !datosBusqueda.clase) {
+            mostrarNotificacion('Seleccioná pasajeros y clase antes de reservar.', 'error');
+            return;
+        }
+
+        const vueloAGuardar = { ...vuelo, origen: obtenerCodigoCiudad(datosBusqueda.origen), destino: obtenerCodigoCiudad(datosBusqueda.destino) };
 
         confirmarSeleccionVuelo(vueloAGuardar);
     }
